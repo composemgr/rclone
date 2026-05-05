@@ -47,8 +47,8 @@ See `docker-compose.yaml` for complete list of configurable options.
 
 ## 📂 Volumes
 
-- `./rootfs/config/rclone` - Data storage
-- `./rootfs/data/rclone` - Data storage
+- `./volumes/config/rclone` - Data storage
+- `./volumes/data/rclone` - Data storage
 
 ## 🔍 Logging
 
