@@ -1,5 +1,6 @@
 # nginx proxy address - http://172.17.0.1:5572
 
+name: rclone
 x-logging: &default-logging
   driver: json-file
   options:
@@ -9,26 +10,30 @@ x-logging: &default-logging
 services:
   rclone:
     image: rclone/rclone:latest
+    pull_policy: always
     container_name: rclone-app
-    restart: unless-stopped
+    hostname: ${BASE_HOST_NAME:-$HOSTNAME}
+    restart: always
     logging: *default-logging
     networks:
       - rclone
     ports:
-      - "5572:5572"
+      - "172.17.0.1:5572:5572"
+    command: rcd --rc-web-gui --rc-addr=:5572 --rc-user=${RC_USER:-admin} --rc-pass=${RC_PASS:-changeme_admin_password} --rc-no-auth=false
     environment:
       TZ: ${TZ:-America/New_York}
       PUID: ${SERVICE_USER:-1000}
       PGID: ${SERVICE_GROUP:-1000}
     volumes:
-      - ./volumes/config/rclone:/config
+      - ./volumes/config/rclone:/config/rclone
       - ./volumes/data/rclone:/data
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5572"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:5572"]
       interval: 30s
       timeout: 10s
       retries: 3
 
 networks:
   rclone:
+    name: rclone
     external: false
