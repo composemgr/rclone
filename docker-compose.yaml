@@ -21,7 +21,7 @@ services:
       - cloudflare
     ports:
       - "172.17.0.1:5572:5572"
-    command: rcd --rc-web-gui --rc-addr=:5572 --rc-user=${RC_USER:-admin} --rc-pass=${RC_PASS:-changeme_admin_password} --rc-no-auth=false
+    command: rcd --rc-web-gui --rc-addr=:5572 --rc-user=${APP_ADMIN_USER:-admin} --rc-pass=${APP_ADMIN_PASS:-changeme_admin_password} --rc-no-auth=false
     environment:
       TZ: ${TZ:-America/New_York}
       PUID: ${SERVICE_USER:-1000}
