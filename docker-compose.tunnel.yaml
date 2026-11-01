@@ -1,0 +1,41 @@
+name: rclone
+x-logging: &default-logging
+  options:
+    max-size: '5m'
+    max-file: '1'
+  driver: json-file
+
+services:
+
+  rclone:
+    image: rclone/rclone:latest
+    container_name: rclone-app
+    domainname: ${BASE_DOMAIN_NAME:-example.com}
+    hostname: ${BASE_HOST_NAME:-$HOSTNAME}
+    restart: always
+    pull_policy: always
+    logging: *default-logging
+    environment:
+      TZ: ${TZ:-America/New_York}
+      CONTAINER_NAME: rclone-app
+      HOSTNAME: ${BASE_HOST_NAME:-$HOSTNAME}
+      RCLONE_CONFIG: /config/rclone.conf
+    command: ['rcd', '--rc-no-auth', '--rc-addr', '0.0.0.0:5572']
+    volumes:
+      - './volumes/config/rclone/rclone.conf:/config/rclone.conf:ro'
+      - './volumes/data/rclone:/data:z'
+    labels:
+      - 'cloudflare.enable=true'
+      - 'cloudflare.service=http://rclone-app:5572'
+      - 'cloudflare.hostname=${BASE_HOST_NAME:-$HOSTNAME}'
+    networks:
+      - rclone
+      - cloudflare
+
+networks:
+  rclone:
+    name: rclone
+    external: false
+  cloudflare:
+    name: cloudflare
+    external: true

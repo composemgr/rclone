@@ -1,63 +1,36 @@
-# nginx proxy address - http://172.17.0.1:5572
+# nginx proxy address - http://172.17.0.1:64324
 
 name: rclone
 x-logging: &default-logging
-  driver: json-file
   options:
-    max-size: "5m"
-    max-file: "1"
+    max-size: '5m'
+    max-file: '1'
+  driver: json-file
 
 services:
   rclone:
     image: rclone/rclone:latest
-    pull_policy: always
     container_name: rclone-app
+    domainname: ${BASE_DOMAIN_NAME:-example.com}
     hostname: ${BASE_HOST_NAME:-$HOSTNAME}
     restart: always
+    pull_policy: always
     logging: *default-logging
-    networks:
-      - rclone
-      - proxy
-      - cloudflare
-    ports:
-      - "172.17.0.1:5572:5572"
-    command: rcd --rc-web-gui --rc-addr=:5572 --rc-user=${APP_ADMIN_USER:-admin} --rc-pass=${APP_ADMIN_PASS:-changeme_admin_password} --rc-no-auth=false
     environment:
       TZ: ${TZ:-America/New_York}
-      PUID: ${SERVICE_USER:-1000}
-      PGID: ${SERVICE_GROUP:-1000}
       CONTAINER_NAME: rclone-app
       HOSTNAME: ${BASE_HOST_NAME:-$HOSTNAME}
+      RCLONE_CONFIG: /config/rclone.conf
+    command: ['rcd', '--rc-no-auth', '--rc-addr', '0.0.0.0:5572']
+    ports:
+      - '172.17.0.1:64324:5572'
     volumes:
-      - ./volumes/config/rclone:/config/rclone
-      - ./volumes/data/rclone:/data
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:5572"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    labels:
-      - 'traefik.enable=true'
-      - 'cloudflare.enable=true'
-      - 'traefik.docker.network=proxy'
-      - 'cloudflare.service=http://rclone-app:5572'
-      - 'cloudflare.hostname=rclone.${CLOUDFLARE_ZONE_NAME:-}'
-      - 'traefik.http.routers.rclone-app.entrypoints=http'
-      - 'traefik.http.routers.rclone-app-secure.tls=true'
-      - 'traefik.http.routers.rclone-app.rule=Host($(${BASE_HOST_NAME:-$HOSTNAME}))'
-      - 'traefik.http.middlewares.rclone-app-https-redirect.redirectscheme.scheme=https'
-      - 'traefik.http.routers.rclone-app.middlewares=rclone-app-https-redirect'
-      - 'traefik.http.routers.rclone-app-secure.entrypoints=https'
-      - 'traefik.http.routers.rclone-app-secure.rule=Host($(${BASE_HOST_NAME:-$HOSTNAME}))'
-      - 'traefik.http.routers.rclone-app-secure.tls.certresolver=cloudflare'
-      - 'traefik.http.routers.rclone-app-secure.service=rclone-app'
-      - 'traefik.http.services.rclone-app.loadbalancer.server.port=5572'
+      - './volumes/config/rclone/rclone.conf:/config/rclone.conf:ro'
+      - './volumes/data/rclone:/data:z'
+    networks:
+      - rclone
 
 networks:
   rclone:
     name: rclone
     external: false
-  proxy:
-    external: true
-  cloudflare:
-    external: true
