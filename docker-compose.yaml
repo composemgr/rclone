@@ -22,6 +22,12 @@ services:
       HOSTNAME: ${BASE_HOST_NAME:-$HOSTNAME}
       RCLONE_CONFIG: /config/rclone.conf
     command: ['rcd', '--rc-no-auth', '--rc-addr', '0.0.0.0:5572']
+    healthcheck:
+      test: ['CMD', 'nc', '-z', '127.0.0.1', '5572']
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
     ports:
       - '172.17.0.1:64324:5572'
     volumes:
